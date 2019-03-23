@@ -18,19 +18,18 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/config")
+ * @Route("/guild")
  */
-class ConfigController extends AbstractController
+class GuildController extends AbstractController
 {
     /**
-     * @Route("/guild/{id}/key/{config_key}", name="config_set",  methods={"PUT"})
+     * @Route("/{id}", name="set_guild",  methods={"PUT"})
      * @param $id
-     * @param $config_key
      * @param Request $request
      * @param SerializerInterface $serializer
      * @return JsonResponse
      */
-    public function setConfig($id, $config_key, Request $request, SerializerInterface $serializer)
+    public function setGuild($id, Request $request, SerializerInterface $serializer)
     {
         $user = $this->get('security.token_storage')->getToken()->getUser();
         if ($user) {
@@ -40,24 +39,22 @@ class ConfigController extends AbstractController
             );
 
             $entityManager = $this->getDoctrine()->getManager();
-            $config = $entityManager->getRepository(Config::class)->findByKey($id, $config_key);
+            $guild = $entityManager->getRepository(Guild::class)->findByGuildId($id);
 
-            if (!$config) {
+            if (!$guild) {
                 // set a new config
-                $config = new Config();
-                $config->setGuildId($id);
-                $config->setConfigKey($config_key);
-                $config->setConfigValue($data['config_value']);
-                $entityManager->persist($config);
+                $guild = new Guild();
+                $guild->setGuildId($id);
+                $guild->setGuildName($data['guild_name']);
+                $entityManager->persist($guild);
                 $entityManager->flush();
             }
             else
             {
-                $config[0]->setConfigValue($data['config_value']);
+                $guild[0]->setConfigValue($data['guild_name']);
                 $entityManager->flush();
             }
-
-            $json = $serializer->serialize($config, 'json');
+            $json = $serializer->serialize($guild, 'json');
 
             return new JsonResponse(json_decode($json), 200);
         } else {
@@ -65,25 +62,23 @@ class ConfigController extends AbstractController
         }
     }
 
-
     /**
-     * @Route("/guild/{id}/key/{config_key}", name="config_get",  methods={"GET"})
+     * @Route("/{id}", name="get_guild",  methods={"GET"})
      * @param $id
-     * @param $config_key
      * @param SerializerInterface $serializer
      * @return JsonResponse
      */
-    public function getConfig($id, $config_key, SerializerInterface $serializer)
+    public function getGuild($id, SerializerInterface $serializer)
     {
         $user = $this->get('security.token_storage')->getToken()->getUser();
         if ($user) {
             $entityManager = $this->getDoctrine()->getManager();
-            $config = $entityManager->getRepository(Config::class)->findByKey($id, $config_key);
-            if ($config) {
-                $json = $serializer->serialize($config, 'json');
+            $guild = $entityManager->getRepository(Guild::class)->findByGuildId($id);
+            if ($guild) {
+                $json = $serializer->serialize($guild, 'json');
                 return new JsonResponse(json_decode($json), 200);
             } else {
-                return new JsonResponse(["error" => 'no config found'], 404);
+                return new JsonResponse(["error" => 'no guild found'], 404);
             }
         } else {
             return new JsonResponse(["error" => 'not a user or not logged in'], 401);

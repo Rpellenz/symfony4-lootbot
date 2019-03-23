@@ -6,6 +6,8 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "friendsofsymfony/user-bundle": "2.1.*@dev",
+        "guzzlehttp/guzzle": "^6.3",
+        "knpuniversity/oauth2-client-bundle": "^1.27",
         "lexik/jwt-authentication-bundle": "^2.6",
         "nelmio/api-doc-bundle": "^3.3",
         "nelmio/cors-bundle": "^1.5",
@@ -30,7 +32,8 @@
         "symfony/web-link": "4.2.*",
         "symfony/yaml": "4.2.*",
         "voku/portable-utf8": "^5.4",
-        "voku/simple_html_dom": "^4.2"
+        "voku/simple_html_dom": "^4.2",
+        "wohali/oauth2-discord-new": "^1.0"
     },
     "require-dev": {
         "symfony/debug-pack": "*",

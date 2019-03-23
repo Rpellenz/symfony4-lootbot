@@ -12,6 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * @Route("/auth")
@@ -68,5 +70,88 @@ class ApiAuthController extends AbstractController
             'username' => $data['username'],
             'password' => $data['password']
         ], 307);
+    }
+
+
+    /**
+     * @Route("/discord/token/check", name="api_auth_dicord_check_token",  methods={"POST"})
+     */
+    public function discordCheck(Request $request, UserManagerInterface $userManager)
+    {
+        $post_data = json_decode(
+            $request->getContent(),
+            true
+        );
+
+
+        $discord_endpoint = getenv('DISCORD_ENDPOINT');
+        $client_id = getenv('DISCORD_CLIENT_ID');
+        $client_secret = getenv('DISCORD_CLIENT_SECRET');
+        $redirect_uri = getenv('DISCORD_REDIRECT_URI');
+        $data =  'client_id=' . $client_id
+            . '&client_secret=' . $client_secret
+            . '&grant_type=authorization_code'
+            . '&code=' . $post_data['code']
+            . '&redirect_uri=' . $redirect_uri
+            . '&scope=' . 'identify guilds';
+
+        $client = new \GuzzleHttp\Client();
+
+        $uri = $discord_endpoint . '/oauth2/token';
+
+
+        try {
+            // $uri = 'http://localhost/symfony4-api-jwt-master/test.php';
+            $response = $client->request('POST', $uri, [
+                'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+                'body' => $data
+            ]);
+        } catch (RequestException $e) {
+            return new JsonResponse(['error' => 'could not authorize discord user'], 401);
+        }
+        if ($response->getStatusCode() === 200) {
+            return new JsonResponse(json_decode($response->getBody()), 200);
+        }
+        return new JsonResponse(['error' => 'could not authorize discord user'], 401);
+    }
+
+    /**
+     * @Route("/discord/token/refresh", name="api_auth_dicord_refresh_token",  methods={"POST"})
+     */
+    public function discordRefreshToken(Request $request, UserManagerInterface $userManager) {
+        $post_data = json_decode(
+            $request->getContent(),
+            true
+        );
+
+        $discord_endpoint = getenv('DISCORD_ENDPOINT');
+        $client_id = getenv('DISCORD_CLIENT_ID');
+        $client_secret = getenv('DISCORD_CLIENT_SECRET');
+        $redirect_uri = getenv('DISCORD_REDIRECT_URI');
+        $data =  'client_id=' . $client_id
+            . '&client_secret=' . $client_secret
+            . '&grant_type=refresh_token'
+            . '&refresh_token=' . $post_data['refresh_token']
+            . '&redirect_uri=' . $redirect_uri
+            . '&scope=' . 'identify guilds';
+
+        $client = new \GuzzleHttp\Client();
+
+        $uri = $discord_endpoint . '/oauth2/token';
+
+
+        try {
+            // $uri = 'http://localhost/symfony4-api-jwt-master/test.php';
+            $response = $client->request('POST', $uri, [
+                'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+                'body' => $data
+            ]);
+        } catch (RequestException $e) {
+            return new JsonResponse(['error' => 'could not authorize discord user'], 401);
+        }
+        if ($response->getStatusCode() === 200) {
+            return new JsonResponse(json_decode($response->getBody()), 200);
+        }
+        return new JsonResponse(['error' => 'could not authorize discord user'], 401);
     }
 }
